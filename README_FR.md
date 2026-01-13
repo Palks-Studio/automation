@@ -4,398 +4,242 @@
 
 > 🇫🇷 Français | [🇬🇧 English](./README.md)
 
-# Système d’automatisation – Facturation & Recettes
+# Palks Studio — Système d’automatisation  
+**Automatisation financière conçue pour la rigueur, la traçabilité et la durée**
 
-Ce dépôt contient un système d’automatisation de facturation conçu pour fonctionner :  
+Ce README documente les principes de conception et l’architecture du système.  
+Il évite volontairement toute procédure opérationnelle ou détail sensible.
 
-- sans CMS  
-- sans SaaS externe  
+---
+
+## Vue d’ensemble
+
+Ce dépôt présente un système d’automatisation financière conçu pour gérer :  
+
+- la génération de factures (directe et batch)  
+- le suivi des recettes  
+- la réconciliation des paiements  
+- les soldes clients  
+- les exports comptables exploitables
+
+Le système est déterministe, auditable et explicite par conception.
+
+Il fonctionne :  
+
 - sans base de données  
+- sans CMS  
+- sans dépendance SaaS  
 - sans interface web exposée
 
-L’ensemble repose sur des scripts PHP exécutés via cron, avec une architecture volontairement simple, lisible et auditable.
+Toutes les exécutions se font côté serveur, via scripts CLI et cron, avec une séparation stricte des responsabilités.
 
-Le système permet :  
-
-- la génération automatique de factures PDF (FR / EN)  
-- l’envoi automatique des factures par email  
-- le suivi des recettes par client (JSON)  
-- l’export des recettes au format CSV (comptable)  
-- une numérotation annuelle fiable des factures.
-
-Il ne constitue **pas** un logiciel de comptabilité certifié et ne remplace pas :  
-
-- un expert-comptable  
-- un logiciel comptable réglementé  
-- ni les obligations fiscales et déclaratives légales
-
-Les données produites par ce système sont destinées à un usage **interne et opérationnel**.
-
----
-
-## Ce que ce dépôt n’est pas
-
-Ce dépôt ne fournit pas :  
-
-- une interface utilisateur  
-- un logiciel SaaS prêt à l’emploi  
-- un outil de facturation certifié  
-- un système de paiement automatisé
-
-Il s’agit d’une **architecture technique documentée**,  
-conçue pour illustrer une approche d’automatisation robuste et autonome.
-
----
-
-## Principes clés
-
-- Un client = un fichier de configuration  
-- Aucune donnée sensible exposée sur le web  
-- Aucune dépendance à un service tiers de facturation  
-- Traçabilité complète (logs, factures, recettes)  
-- Exécution exclusivement en ligne de commande (CLI)
-
-Ce système est conçu pour être :  
-
-- robuste  
-- prévisible  
-- maintenable dans le temps  
-- compréhensible sans connaissance avancée
+Ce projet n’est pas un produit, pas un SaaS, pas un outil clé en main.  
+Il documente une approche de production sérieuse de l’automatisation financière.
 
 ---
 
 ## Structure du projet
 
+La structure complète du projet n’est volontairement pas détaillée ligne par ligne dans ce README.
+
+Pour comprendre l’organisation générale du système, se référer au dossier d’exemple :
+
 ```
-automation/
-│
-├── engine/
-│   ├── run.php                     → Moteur principal d’automatisation (cron / CLI) (FR)
-│   │                               → Main automation engine (cron / CLI) (EN)
-│   │ 
-│   ├── export_accounting_year.php  → Export annuel des recettes (FR)
-│   │                               → Annual revenue export (EN)
-│   │
-│   ├── billing_rules.php           → Règles de facturation et de tarification dynamique (FR)
-│   │                               → Billing rules and dynamic pricing logic (EN)
-│   │
-│   ├── run_batch.php               → Moteur d’automatisation BATCH pour la facturation clients (FR)
-│   │                               → Batch automation engine for client invoicing (EN)
-│   │
-│   ├── vendor/                     → Dépendances PHP (ex: DomPDF) (FR)
-│   │                               → PHP dependencies (e.g. DomPDF) (EN)
-│   │
-│   ├── alerts                      → Gestion des alertes et notifications d’exécution (FR)
-│   │                               → Execution alerts and notifications handling (EN)
-│   │
-│   ├── import_cvs.php              → Import et validation des fichiers CSV clients (FR)
-│   │                               → Client CSV import and validation handler (EN)
-│   │
-│   ├── mailer.php                  → Envoi des emails avec facture en pièce jointe (FR)
-│   │                               → Email sender with invoice attachment (EN)
-│   └── templates/
-│       ├── invoice.html.php        → Template PDF de facture (bilingue FR / EN) (FR)
-│       │                           → Invoice PDF template (bilingual FR / EN) (EN)
-│       │
-│       └── invoices_batch.html.php → Facture CLIENTS (batch) (FR)
-│                                   → Client Invoices (Batch) (EN)
-├── clients/
-│   └── client_xxx.php              → Fiche client (seul fichier à modifier par client) (FR)
-│                                   → Client configuration file (only file to edit per client) (EN)
-├── batch_clients/
-│   └── client_xxx.php              → Configuration batch d’un client final (facturation mensuelle) (FR)
-│                                   → Batch configuration for an end client (monthly invoicing) (EN)
-├── data/
-│   ├── logs/
-│   │   └── xxx.log                 → Logs d’exécution par client (FR)
-│   │                               → Execution logs per client (EN)
-│   ├── archive_batch/
-│   │   └── xxx.csv                 → CSV client archivé (FR)
-│   │                               → Archived client CSV (EN)
-│   ├── usage/
-│   │   └── xxx.json                → Suivi d’usage mensuel par client (FR)
-│   │                               → Monthly client usage tracking (EN)
-│   ├── revenues/
-│   │   └── xxx.json                → Recettes cumulées (source comptable interne) (FR)
-│   │                               → Cumulative revenues (internal accounting source) (EN)
-│   ├── payments/
-│   │   └── xxx.json                → Paiements reçus du client (virements, montants réellement encaissés) (FR)
-│   │                               → Payments received from the client (bank transfers, actually received amounts) (EN)
-│   ├── balance/
-│   │   └── xxx.json                → Solde comptable du client (facturé vs payé, statut payé / impayé) (FR)
-│   │                               → Client accounting balance (invoiced vs paid, paid / unpaid status) (EN)
-│   ├── invoices/
-│   │   └── client/                 → Factures de l’activité principale (facturation directe, usage interne) (FR)
-│   │                               → Invoices from the main activity (direct invoicing, internal use) (EN)
-│   ├── invoices_batch/
-│   │   └── client/                 → Factures générées dans le cadre du service batch (clients finaux) (FR)
-│   │                               → Invoices generated as part of the batch service (end clients) (EN)
-│   ├── inbox_batch/
-│   │   └── batch.csv               → Fichier CSV fourni par le client (source de facturation batch) (FR)
-│   │                               → Client-provided CSV file (batch invoicing source) (EN)
-│   ├── counters/
-│   │   └── xxx.json                → Compteur annuel de factures par client (facturation directe) (FR)
-│   │                               → Annual invoice counter per client (direct invoicing) (EN)
-│   └── counters_batch/
-│       └── xxx.json                → Compteur annuel de factures par client (facturation batch) (FR)
-│                                   → Annual invoice counter per client (batch invoicing) (EN)
-├── docs/
-│       └── format_csv.md           → Spécification officielle du format CSV attendu (FR)
-│                                   → Official specification of the expected CSV format (EN)
-├── tools/
-│   ├── update_balances.php         → Met à jour les soldes clients à partir des recettes et des paiements (FR)
-│   │                               → Updates client balances based on revenues and payments (EN)
-│   │
-│   ├── purge_log.php               → Script de nettoyage (FR)
-│   │                               → Cleanup Script (EN)
-│   │
-│   └── export_revenues_csv.php     → Script PHP d’export des recettes vers un fichier CSV (comptabilité) (FR)
-│                                   → PHP script to export revenues to a CSV file (accounting) (EN)
-├── exports/
-│   └── export_revenues.csv         → Fichier CSV contenant les recettes exportées (données tabulaires) (FR)
-│                                   → CSV file containing exported revenues (tabular data) (EN)
-├── downloads/
-│   └── *.zip                       → Archives ZIP mensuelles par client, contenant les factures PDF générées automatiquement (FR)
-│                                   → Monthly ZIP archives per client, containing automatically generated PDF invoices (EN)
-│
-├── LICENSE.md                      → Conditions d’utilisation et cadre légal (FR)
-│                                   → Terms of use and legal Framework (EN)
-│
-└── README.md                       → Documentation générale du système (FR)
-                                    → General system documentation (EN)
+public_version/example_structure/
 ```
 
+
+
+Ce dossier reflète l’architecture réelle et les responsabilités du système,  
+sans exposer d’éléments opérationnels ou sensibles.
+
+Le dépôt réel suit les mêmes principes et la même logique.
 
 ---
 
-## Fonctionnement global
+## Ce que ce dépôt est (et n’est pas)
 
-### 1. Configuration client
+### Ce dépôt est
 
-Chaque client est défini dans un fichier dédié :
+- une architecture documentée d’automatisation financière  
+- un système pensé pour être prévisible et auditable  
+- un exemple de séparation stricte entre facturation, paiements et comptabilité  
+- un système réel utilisé en conditions de production
 
-```bash
-clients/client_xxx.php
-```
+### Ce dépôt n’est pa
 
+- un logiciel de comptabilité certifié  
+- un outil de facturation prêt à l’emploi  
+- un système de paiement automatisé  
+- une application web ou une API
 
-- l’identité du client  
-- les informations de facturation  
-- la devise  
-- la langue (FR / EN)  
-- le mode (`test` ou `live`)
-
-C’est le seul fichier à modifier pour ajouter ou ajuster un client.
-
----
-
-### 2. Exécution automatique (cron)
-
-Le script principal est :
-
-```
-engine/run.php
-```
-
-
-Il est exécuté via une tâche cron (exemple quotidien ou mensuel).
-
-À chaque exécution :  
-
-- les clients actifs sont parcourus  
-- une facture est générée si applicable  
-- la facture est archivée  
-- les recettes sont mises à jour  
-- un email est envoyé au client  
-- les logs sont écrits
+Les données produites sont destinées à un usage interne et opérationnel,  
+et à une intégration propre avec des processus comptables classiques.
 
 ---
 
-### 3. Facturation PDF
+## Principes de conception
 
-- Les factures sont générées au format PDF via DomPDF  
-- Le template est bilingue FR / EN  
-- La langue dépend uniquement de la configuration du client  
-- Les mentions légales (TVA, exonération, etc.) sont gérées automatiquement
+Ce système repose sur un ensemble de principes non négociables :  
 
-Les factures sont archivées par client dans :
+- **Aucune magie**  
+  Chaque opération est explicite et traçable.
 
-```bash
-data/invoices/{client_id}/
-```
+- **Aucun traitement silencieux**  
+  Une erreur bloque l’exécution et est loggée.
 
+- **Aucune correction implicite**  
+  Une donnée invalide est rejetée, jamais “corrigée”.
 
----
+- **Les fichiers sont des preuves**  
+  Les artefacts générés sont considérés comme immuables.
 
-### 4. Recettes (source comptable)
+- **Séparation stricte des responsabilités**  
+  Facturation, paiements, soldes, reçus et exports sont indépendants.
 
-Pour chaque client, un fichier JSON est maintenu :
+- **Exécution exclusivement en CLI**  
+  Aucun accès web, aucune ambiguïté.
 
-```bash
-data/revenues/{client_id}.json
-```
-
-
-Il contient :  
-
-- le total cumulé  
-- l’historique détaillé des factures émises  
-- la devise  
-- les dates et numéros de facture
-
-Ce fichier est la source comptable interne du système.
+Ces choix privilégient la prévisibilité à la commodité,  
+et la clarté à la vitesse.
 
 ---
 
-### 5. Export comptable (CSV)
+## Architecture du système (vue globale)
 
-Un outil d’export est fourni :
+Le système est composé de couches indépendantes, chacune ayant une responsabilité unique :  
 
-```bash
-tools/export_revenues_csv.php
-```
+- **Moteurs de facturation**  
+  - facturation directe  
+  - facturation batch (CSV)
 
+- **Règles métier**  
+  - logique tarifaire centralisée  
+  - source de vérité unique
 
-Il permet de générer des fichiers CSV exploitables par :  
+- **Couche d’alertes**  
+  - alertes bloquantes vs informatives  
+  - retours d’exécution explicites
 
-- un tableur  
-- un expert-comptable  
-- un logiciel de comptabilité
+- **Couche paiements**  
+  - enregistrements manuels  
+  - volontairement découplée de la facturation
 
-Les CSV peuvent être supprimés et régénérés à tout moment
-(sans impact sur les données sources).
+- **Réconciliation des soldes**  
+  - calcul facturé vs payé  
+  - détection payé / impayé
 
----
+- **Couche exports**  
+  - fichiers CSV exploitables comptablement  
+  - régénérables à tout moment
 
-## Cycle mensuel réel (facturation & paiements)
-
-Le système fonctionne selon un cycle mensuel simple et prévisible.
-
-### Avant le 15 du mois
-
-- Les clients effectuent leur paiement (virement bancaire).  
-- Aucun email n’est envoyé automatiquement avant cette date.
-
-### Le 13 ou 14 du mois (contrôle manuel rapide)
-
-- Vérifier les paiements reçus sur le compte bancaire.
-
-- Mettre à jour les fichiers dans `data/payments/` :  
-
-  - un fichier par client  
-  - vide si aucun paiement  
-  - rempli si paiement reçu
-
-### Mise à jour comptable
-
-Lancer le script suivant en ligne de commande :
-
-```bash
-php tools/update_balances.php
-```
-
-Ce script :  
-
-- compare les montants facturés vs payés  
-- calcule le solde  
-- définit automatiquement le statut`paid` ou `unpaid`
-
-Les résultats sont écrits dans :
-
-```bash
-data/balance/{client_id}.json
-```
-
-
-### Le 15 du mois
-
-Les factures sont générées automatiquement
-
-Les emails sont envoyés UNIQUEMENT si :  
-
-- le client est actif  
-- `options.auto_send = true`  
-- le script est exécuté le 15
-
-Aucun envoi n’a lieu en dehors de cette date.
+Aucune couche ne modifie une autre de manière implicite.
 
 ---
 
-## Règles d’envoi des emails
+## Structure du projet (vue conceptuelle)
 
-L’envoi des factures par email est strictement contrôlé.
+L’arborescence reflète directement les responsabilités du système :  
 
-Conditions nécessaires pour qu’un email parte :  
-
-- le client est actif (`active = true`)  
-- l’option `options.auto_send = true`  
-- le script est exécuté le 15 du mois  
-- l’exécution se fait en CLI (cron)
-
-Cette règle est volontairement codée dans `mailer.php`  
-afin d’éviter tout envoi accidentel ou hors cycle.
-
----
-
-## Facturation batch (service clients)
-
-Le système inclut un moteur de facturation batch destiné aux clients  
-qui transmettent leurs propres données de facturation via CSV.
-
-Fonctionnement :  
-
-- un fichier CSV par client  
-- une ligne CSV = une facture PDF  
-- génération automatique des factures  
-- regroupement mensuel en archive ZIP  
-- envoi du lien par email (optionnel)
-
-Script concerné :
-
-```bash
-engine/run_batch.php
-```
+engine/ → moteurs d’exécution et logique métier  
+clients/ → configuration client (un fichier par client)  
+batch_clients/ → définitions clients batch  
+data/ → données opérationnelles immuables  
+docs/ → spécifications internes (ex : format CSV)  
+tools/ → outils de réconciliation et d’export  
+exports/ → artefacts comptables générés  
+downloads/ → archives de factures
 
 
-Règles importantes :  
-
-- les PDF sont toujours générés  
-- l’envoi (ZIP + email) dépend uniquement de `options.auto_send`  
-- l’envoi est limité au 15 du mois  
-- un envoi par client et par mois (anti-double envoi)
-
-La spécification du format CSV attendu est documentée dans :  
-
-`docs/format_csv.md`
-
-Ce document est destiné à un usage interne ou à un client technique encadré.
+Chaque dossier existe pour une seule raison précise.  
+Tout couplage transversal est volontairement évité.
 
 ---
 
-## Sécurité
+## Modèle d’exécution
 
-- Le moteur refuse toute exécution hors CLI  
-- Aucun endpoint web n’est exposé  
-- Les données sont stockées localement sur le serveur  
-- Aucun accès direct n’est prévu depuis un navigateur
+Le système fonctionne selon un cycle fermé et reproductible :  
+
+1. **Phase de génération**  
+   Les factures sont produites selon des règles explicites.
+
+2. **Phase de paiement**  
+   Les paiements sont enregistrés indépendamment, sans automatisme.
+
+3. **Phase de réconciliation**  
+   Les montants facturés sont comparés aux paiements reçus.
+
+4. **Phase de consolidation**  
+   Les soldes clients sont calculés et mis à jour.
+
+5. **Phase d’export**  
+   Les données comptables sont générées à la demande.
+
+Le système ne devine jamais une information manquante.
 
 ---
 
-## Nettoyage et maintenance
+## Facturation batch
 
-- Les dossiers `logs/` et les exports CSV peuvent être nettoyés sans risque  
-- Les dossiers `invoices/`, `revenues/` et `counters/` ne doivent jamais être supprimés  
-- La numérotation des factures est automatique et annuelle
+En mode batch :  
+
+- un client fournit un fichier CSV  
+- une ligne CSV correspond à une facture  
+- la validation est stricte et structurelle  
+- le batch entier s’arrête à la première erreur  
+- les entrées brutes sont archivées avant consommation
+
+Ce modèle privilégie l’intégrité des données au succès partiel.
+
+---
+
+## Intégrité et garde-fous
+
+Le système met en œuvre :  
+
+- protections anti-doublons  
+- compteurs séquentiels annuels  
+- archives immuables  
+- flags d’exécution explicites  
+- alertes catégorisées  
+- journalisation exhaustive
+
+Un arrêt franc est considéré plus sûr qu’un traitement incomplet.
+
+---
+
+## Posture de sécurité
+
+- exécution exclusivement en CLI  
+- aucun endpoint exposé  
+- aucun accès navigateur  
+- aucune dépendance API critique  
+- données stockées localement sur le serveur
+
+La sécurité repose sur l’absence de surface d’attaque,  
+pas sur la complexité.
+
+---
+
+## Maintenance et pérennité
+
+Le système est conçu pour :  
+
+- être compris sans son auteur  
+- être audité des mois ou années plus tard  
+- échouer de manière visible  
+- s’intégrer proprement à des flux comptables standards
+
+Ce dépôt documente une approche d’ingénierie, pas un raccourci.
 
 ---
 
 ## État du projet
 
-Statut : Stable – prêt pour une utilisation en production.
+Statut : Stable — utilisé en conditions réelles de production.
 
-Le système est utilisé en conditions réelles,  
-sans dépendance externe critique  
-et conçu pour fonctionner de manière autonome sur le long terme
+Le système est conçu pour fonctionner de manière autonome,  
+avec une exigence forte de rigueur, traçabilité et maintenabilité long terme.
 
 ---
 
