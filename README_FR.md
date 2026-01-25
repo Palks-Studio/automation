@@ -38,12 +38,39 @@ Il documente une approche de production sérieuse de l’automatisation financi�
 
 ---
 
+## Conformité Factur-X / EN16931
+
+Le système génère des factures au format **Factur-X (profil Comfort)** avec un **XML structuré conforme à la norme européenne EN 16931**.
+
+Caractéristiques :  
+
+- XML Factur-X **profil Comfort**  
+- Conformité sémantique **EN 16931**  
+- Validation XSD  
+- Validation Schematron  
+- Interopérabilité e-facturation (France / UE)  
+- Exploitable par plateformes de dématérialisation et systèmes comptables
+
+Chaque facture PDF générée contient :  
+
+- le document PDF lisible pour l’humain  
+- le XML Factur-X embarqué pour le traitement automatique
+
+- Le système vise la conformité métier et interopérabilité e‑facturation. La conformité PDF/A (archivage documentaire) n’est pas un objectif   fonctionnel du projet et est volontairement hors périmètre.
+
+---
+
 ## Structure du projet
 
 ```
 automation/
 │
 ├── engine/
+│   ├── build_facturx_xml.php       → Génération du XML Factur-X (FR)
+│   │                               → Factur-X XML generation (EN)
+│   │
+│   ├── inject_facturx.py           → Injection du XML Factur-X dans le PDF (FR)
+│   │                               → Factur-X XML injection into PDF (EN)
 │   ├── run.php                     → Moteur principal d’automatisation (cron / CLI) (FR)
 │   │                               → Main automation engine (cron / CLI) (EN)
 │   │
