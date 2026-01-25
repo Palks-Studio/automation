@@ -38,12 +38,40 @@ It documents a production-grade approach to financial automation.
 
 ---
 
+## Factur-X / EN16931 Compliance
+
+The system generates invoices in the **Factur-X format (Comfort profile)** with a **structured XML compliant with the European EN 16931 standard**.
+
+Features:  
+
+- Factur-X XML **Comfort profile**  
+- **EN 16931** semantic compliance  
+- XSD validation  
+- Schematron validation  
+- E-invoicing interoperability (France / EU)  
+- Compatible with e-invoicing platforms and accounting systems
+
+Each generated PDF invoice contains:  
+
+- a human-readable PDF document  
+- the embedded Factur-X XML for automated processing
+
+- The system focuses on business compliance and e-invoicing interoperability.  
+- PDF/A compliance (documentary archiving) is not a functional objective of the project and is intentionally out of scope.
+
+---
+
 ## Project structure
 
 ```
 automation/
 │
 ├── engine/
+│   ├── build_facturx_xml.php       → Génération du XML Factur-X (FR)
+│   │                               → Factur-X XML generation (EN)
+│   │
+│   ├── inject_facturx.py           → Injection du XML Factur-X dans le PDF (FR)
+│   │                               → Factur-X XML injection into PDF (EN)
 │   ├── run.php                     → Moteur principal d’automatisation (cron / CLI) (FR)
 │   │                               → Main automation engine (cron / CLI) (EN)
 │   │
@@ -335,4 +363,4 @@ with a strong emphasis on rigor, traceability, and long-term maintainability.
 ---
 
 © Palks Studio — see LICENSE.md  
-https://palks-studio.com
+- https://palks-studio.com
