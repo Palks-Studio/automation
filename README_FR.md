@@ -296,14 +296,14 @@ sans effet de bord global.
 
 L’arborescence reflète directement les responsabilités du système :  
 
-engine/ → moteurs d’exécution et logique métier  
-clients/ → configuration client (un fichier par client)  
-batch_clients/ → définitions clients batch  
-data/ → données opérationnelles immuables  
-docs/ → spécifications internes (ex : format CSV)  
-tools/ → outils de réconciliation et d’export  
-exports/ → artefacts comptables générés  
-downloads/ → archives de factures
+`engine/`        → moteurs d’exécution et logique métier  
+`clients/`       → configuration client (un fichier par client)  
+`batch_clients/` → définitions clients batch  
+`data/`          → données opérationnelles immuables  
+`docs/`          → spécifications internes (ex : format CSV)  
+`tools/`         → outils de réconciliation et d’export  
+`exports/`       → artefacts comptables générés  
+`downloads/`     → archives de factures
 
 
 Chaque dossier existe pour une seule raison précise.  
