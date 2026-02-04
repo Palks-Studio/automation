@@ -294,14 +294,14 @@ without global side effects.
 
 The directory layout mirrors the system’s responsibilities:  
 
-engine/ → execution engines & business logic  
-clients/ → client configuration (one file per client)  
-batch_clients/ → batch client definitions  
-data/ → immutable operational data (logs, invoices, balances)  
-docs/ → internal specifications (e.g. CSV format)  
-tools/ → reconciliation and export utilities  
-exports/ → generated accounting artifacts  
-downloads/ → packaged invoice archives
+`engine/`        → execution engines & business logic  
+`clients/`       → client configuration (one file per client)  
+`batch_clients/` → batch client definitions  
+`data/`          → immutable operational data (logs, invoices, balances)  
+`docs/`          → internal specifications (e.g. CSV format)  
+`tools/`         → reconciliation and export utilities  
+`exports/`       → generated accounting artifacts  
+`downloads/`     → packaged invoice archives
 
 
 Each directory exists for one reason only.  
