@@ -2,9 +2,9 @@
   <img src="docs/images/Palks_Studio.png" alt="Palks Studio" width="600">
 </p>
 
-![License](https://img.shields.io/badge/License-LICENSE.md-lightgreen.svg)
-
 > 🇫🇷 Français | [🇬🇧 English](./README.md)
+
+![License](https://img.shields.io/badge/License-LICENSE.md-lightgreen.svg)
 
 # Palks Studio — Système d’automatisation  
 **Automatisation financière conçue pour la rigueur, la traçabilité et la durée**
