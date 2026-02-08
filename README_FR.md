@@ -7,6 +7,9 @@
 > 🇫🇷 Français | [🇬🇧 English](./README.md)
 
 ![License](https://img.shields.io/badge/License-LICENSE.md-lightgreen.svg)
+![PHP](https://img.shields.io/badge/PHP-CLI-777BB4?style=flat)
+![Automation](https://img.shields.io/badge/Type-Automation-0095b1?style=flat)
+![Factur-X](https://img.shields.io/badge/Invoice-Factur--X-151b1c?style=flat)
 
 <p align="center">
   <a href="https://palks-studio.com">
