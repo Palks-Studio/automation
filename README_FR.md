@@ -104,13 +104,12 @@ automation_finance/
 │   ├── run.php                       → Moteur principal d’automatisation (cron / CLI)
 │   ├── run_batch.php                 → Moteur d’automatisation BATCH pour la facturation clients
 │   ├── billing_rules.php             → Règles de facturation et de tarification dynamique
-│   ├── vendor/                       → Dépendances PHP (ex: DomPDF)
 │   ├── alerts.php                    → Gestion des alertes et notifications d’exécution
 │   ├── import_csv.php                → Import et validation des fichiers CSV clients
 │   ├── mailer.php                    → Envoi des emails avec facture en pièce jointe
 │   ├── mail_signature.php            → Signature Palks Studio
-│   └── templates/
-│       └── invoice.html.php          → Templates PDF de facture (bilingue FR / EN)
+│   ├── vendor/                       → Dépendances PHP (ex: DomPDF)
+│   └── templates/                    → Templates PDF de facture (bilingue FR / EN)
 │
 ├── data/
 │   ├── logs/                         → Logs d’exécution par client
@@ -134,9 +133,10 @@ automation_finance/
 │   ├── build_client.php              → Génération de l’index email
 │   ├── send_paid_receipts.php        → Envoi automatique des reçus clients payés
 │   ├── purge_log.php                 → Script de nettoyage
-│   ├── recettes_year.php             → Script PHP d’export des recettes encaissées sur une année complète
-│   ├── recettes_month.php            → Script PHP d’export des recettes encaissées sur un mois donné
-│   └── revenues_csv.php              → Script PHP d’export des recettes vers un fichier CSV (comptabilité)
+│   ├── client_project.php            → Export des artefacts liés à un client à partir de son identifiant
+│   ├── recettes_year.php             → Export des recettes encaissées sur une année complète
+│   ├── recettes_month.php            → Export des recettes encaissées sur un mois donné
+│   └── revenues_csv.php              → Export des recettes vers un fichier CSV (comptabilité)
 │
 ├── exports/
 │   ├── recettes/                     → CSV mensuels / annuels générés à la demande
@@ -296,9 +296,23 @@ Le système fonctionne selon un cycle fermé et reproductible :
 5. **Phase d’export**  
    Les données comptables sont générées à la demande.
 
-Les configurations clients sont préparées en amont via le formulaire  
-d’onboarding puis transformées par `engine/build_json.php`  
-avant leur utilisation par le moteur batch.
+### Outil d’onboarding client
+
+`engine/build_json.php` transforme les données issues du formulaire  
+d’onboarding en configuration client interne utilisée par le pipeline  
+d’automatisation.
+
+Lors du traitement, le script :  
+
+- génère un `client_id` unique  
+- crée la configuration client  
+- prépare la définition batch du client  
+- initialise le suivi des paiements  
+- archive le dossier d’onboarding traité
+
+Cette étape intervient strictement en phase de préparation  
+et n’interfère pas avec le cycle d’exécution mensuel.
+
 
 Le système ne devine jamais une information manquante.
 
@@ -327,6 +341,26 @@ des cas complexes sans modifier le cycle d’exécution :
 Ces capacités sont intégrées  
 sans introduire de logique conditionnelle implicite  
 ni de traitement spécial hors moteur.
+
+### Point d’entrée — dépôt CSV client
+
+Le fichier CSV mensuel est déposé par le client via un formulaire  
+d’upload dédié, accessible uniquement par lien sécurisé individuel  
+transmis après validation contractuelle.
+
+Le point d’entrée :  
+
+- accepte uniquement des fichiers CSV  
+- met à disposition un modèle CSV de référence téléchargeable  
+- stocke le fichier dans le répertoire structuré `inbox_batch/`  
+- applique une règle d’unicité de dépôt par client et par période  
+- conserve le fichier pour validation stricte en aval
+
+Le CSV déposé est traité comme une **source brute de données de facturation**  
+et n’est jamais considéré comme une facture finale.
+
+Il est ensuite validé et consommé exclusivement par `run_batch.php`  
+dans le cadre du pipeline batch standard.
 
 ---
 
@@ -383,6 +417,7 @@ Statut : Stable — utilisé en conditions réelles de production.
 
 Le système est conçu pour fonctionner de manière autonome,  
 avec une exigence forte de rigueur, traçabilité et maintenabilité long terme.
+
 ---
 
 © Palks Studio — voir LICENSE.md  
