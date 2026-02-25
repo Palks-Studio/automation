@@ -381,6 +381,29 @@ avec les mêmes exigences qu’un cas simple.
 
 ---
 
+## Mode mono-client (exécution ciblée)
+
+Certains scripts CLI du moteur supportent un paramètre optionnel :  
+
+`--client=<client_id>`
+
+Ce mode permet une exécution ciblée sur un client unique  
+à des fins de diagnostic ou de reprise contrôlée.
+
+Le filtrage repose exclusivement sur le `client_id`  
+généré lors de l’onboarding.
+
+Ce mécanisme n’altère pas :  
+
+- les protections anti-doublon  
+- les flags d’exécution  
+- la logique métier globale 
+
+Il constitue un outil d’exploitation ponctuel,  
+et ne remplace pas le fonctionnement planifié du système.
+
+---
+
 ## Posture de sécurité
 
 - exécution exclusivement en CLI  
