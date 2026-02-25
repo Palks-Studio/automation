@@ -378,6 +378,29 @@ with the same requirements as a simple one.
 
 ---
 
+## Single-client mode (targeted execution)
+
+Some CLI scripts support an optional parameter:  
+
+`--client=<client_id>`
+
+This mode allows targeted execution for a single client,  
+mainly for diagnostics or controlled recovery.
+
+Filtering relies exclusively on the onboarding-generated
+`client_id`.
+
+This mechanism does not alter:  
+
+- anti-duplicate protections  
+- execution flags  
+- core business logic
+
+It is intended for occasional operational use  
+and does not replace scheduled system execution.
+
+---
+
 ## Security posture
 
 - CLI-only execution  
