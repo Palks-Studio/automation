@@ -19,6 +19,9 @@
 
 # Moteur de facturation directe (PHP + Dompdf + Factur-X)
 
+> Ce dépôt constitue une présentation technique et une documentation du projet.  
+> Il ne contient pas de code source téléchargeable ni de fichiers de production.
+
 > Moteur de facturation orienté sécurité et sorties déterministes.
 
 Moteur léger et déterministe de génération de factures électroniques :  
