@@ -18,6 +18,9 @@
 
 # Direct Invoice Engine (PHP + Dompdf + Factur-X)
 
+> This repository is a technical presentation and documentation repository.  
+> It does not contain downloadable source code or production files.
+
 Lightweight and deterministic invoice generation engine:  
 
 - Receives data from an HTML form (POST)  
