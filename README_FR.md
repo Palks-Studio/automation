@@ -19,10 +19,9 @@
 
 # Moteur de facturation directe (PHP + Dompdf + Factur-X)
 
+> Moteur de facturation orienté sécurité et sorties déterministes.
 > Ce dépôt constitue une présentation technique et une documentation du projet.  
 > Il ne contient pas de code source téléchargeable ni de fichiers de production.
-
-> Moteur de facturation orienté sécurité et sorties déterministes.
 
 Moteur léger et déterministe de génération de factures électroniques :  
 
@@ -41,6 +40,20 @@ Le projet privilégie :
 - sorties déterministes  
 - traçabilité complète  
 - architecture lisible
+
+---
+
+## Philosophie d’architecture
+
+Ce moteur privilégie une architecture simple et déterministe :  
+
+- stockage filesystem plutôt que base de données  
+- traitements batch explicites  
+- formats ouverts (PDF, XML, JSON, CSV)  
+- absence de dépendances SaaS critiques
+
+L'objectif est de garantir un système compréhensible,  
+maintenable et auditable sur le long terme.
 
 ---
 
@@ -69,8 +82,6 @@ Une interface sécurisée permet de :
 
 L’accès est protégé par authentification.
 
----
-
 ### Recherche client
 
 Un endpoint interne permet la recherche d’un client existant  
@@ -83,6 +94,20 @@ Objectifs :
 - accélérer la saisie de factures
 
 L’accès à cet endpoint est protégé par session.
+
+#### Sources de recherche
+
+La recherche client peut interroger plusieurs sources internes :  
+
+- configurations clients (`clients/*/config.php`)  
+- métadonnées des devis existants  
+- métadonnées des factures générées
+
+Ce mécanisme permet :  
+
+- d’éviter la duplication de clients  
+- de préremplir automatiquement les informations  
+- d’accélérer la création de factures
 
 ---
 
@@ -104,9 +129,12 @@ automation/
 ├── logs/                                 → Journaux techniques applicatifs
 ├── vendor/                               → Dépendances PHP
 ├── clients/                              → Configuration des clients finaux
+│
 ├── data/
 │   ├── invoices/                         → Factures émises
-│   ├── acquittee/                        → Factures acquittées
+│   ├── invoices_state/                   → Factures acquittées générées en attente de validation de paiement
+│   ├── invoices_paid/                    → Factures acquittées confirmées après validation du paiement
+│   ├── acquittee/                        → Factures acquittées générées lors du processus de facturation
 │   └── tmp_facturx/                      → Fichiers temporaires Factur-X
 │ 
 │── app.py                                → Point d’entrée applicatif Python
@@ -133,6 +161,31 @@ automation/
     └── mark_paid.php                     → Interface sécurisée de validation des paiements
 ```
 
+
+## Organisation des données
+
+Le moteur utilise un stockage local structuré basé sur le système de fichiers.
+
+clients/  
+→ configurations clients (config.php)
+
+data/invoices/  
+→ factures générées
+
+data/invoices_state/  
+→ factures en attente de validation de paiement
+
+data/invoices_paid/  
+→ factures acquittées archivées
+
+data/revenues/  
+→ journaux CSV des recettes annuelles
+
+counters/  
+→ compteurs séquentiels de numérotation des factures
+
+logs/  
+→ journaux techniques d'exécution
 
 ---
 
@@ -220,6 +273,24 @@ Contenant notamment :
 - hash SHA-256 du PDF
 
 Objectif : auditabilité et intégrité.
+
+---
+
+## Modèle d’archivage
+
+Les factures sont considérées comme immuables après génération.
+
+Le changement d’état (paiement) est géré par :  
+
+- déplacement de la facture acquittée  
+- mise à jour du fichier `.meta.json`  
+- écriture dans le journal CSV des recettes
+
+Ce modèle garantit :  
+
+- traçabilité complète  
+- auditabilité  
+- absence de modification des documents originaux
 
 ---
 
