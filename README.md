@@ -20,6 +20,7 @@
 
 > This repository is a technical presentation and documentation repository.  
 > It does not contain downloadable source code or production files.
+> A security-focused invoicing engine with deterministic outputs.
 
 Lightweight and deterministic invoice generation engine:  
 
@@ -83,6 +84,22 @@ Access to this endpoint is protected by session.
 
 ---
 
+#### Lookup sources
+
+The client lookup mechanism can query several internal sources:  
+
+- client configurations (`clients/*/config.php`)  
+- metadata of existing quotes  
+- metadata of previously generated invoices
+
+This mechanism helps:  
+
+- prevent duplicate client creation  
+- automatically prefill client information  
+- speed up invoice creation
+
+---
+
 ## Project structure
 
 ```
@@ -101,9 +118,12 @@ automation/
 ├── logs/                                 → Application technical logs
 ├── vendor/                               → PHP dependencies
 ├── clients/                              → End-client configuration
+│
 ├── data/
 │   ├── invoices/                         → Issued invoices
-│   ├── acquittee/                        → Paid invoices
+│   ├── invoices_state/                   → Generated paid invoices awaiting payment validation
+│   ├── invoices_paid/                    → Paid invoices confirmed after payment validation
+│   ├── acquittee/                        → Paid invoice versions generated during the invoicing process
 │   └── tmp_facturx/                      → Temporary Factur-X files
 │ 
 │── app.py                                → Python entry point (Factur-X injection)
@@ -130,6 +150,31 @@ automation/
     └── mark_paid.php                     → Secure payment validation interface
 ```
 
+
+## Data organization
+
+The engine relies on a structured filesystem-based storage.
+
+clients/  
+→ client configuration files (`config.php`)
+
+data/invoices/  
+→ issued invoices
+
+data/invoices_state/  
+→ paid invoice versions awaiting payment validation
+
+data/invoices_paid/  
+→ confirmed paid invoices
+
+data/revenues/  
+→ yearly revenue CSV logs
+
+counters/  
+→ sequential invoice numbering counters
+
+logs/  
+→ technical execution logs
 
 ---
 
@@ -217,6 +262,25 @@ Containing:
 - PDF SHA-256 hash
 
 Purpose: auditability and integrity.
+
+---
+
+## Archiving model
+
+Invoices are considered immutable once generated.
+
+Payment validation does not modify the original document.  
+Instead, the state change is recorded through:  
+
+- moving the paid invoice version  
+- updating the `.meta.json` metadata file  
+- writing an entry in the revenue CSV log
+
+This model ensures:  
+
+- full traceability  
+- auditability  
+- preservation of original documents
 
 ---
 
